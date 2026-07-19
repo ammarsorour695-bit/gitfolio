@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitFolio - Instant GitHub Portfolio Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/fontsource-inter@4.0.0/index.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f5f1eb;
+            --bg-secondary: #ebe5dc;
+            --text-primary: #2c2420;
+            --text-secondary: #6b5d54;
+            --accent: #8b7355;
+            --accent-light: #a89070;
+            --white: #ffffff;
+            --shadow: rgba(44, 36, 32, 0.08);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(245, 241, 235, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--bg-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            text-decoration: none;
+        }
+
+        .logo:hover {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Search Box */
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        .search-box {
+            display: flex;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 0.5rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .search-box:focus-within {
+            box-shadow: 0 8px 30px rgba(44, 36, 32, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-family: inherit;
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-box button {
+            background: var(--accent);
+            color: var(--white);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .search-box button:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+        }
+
+        .search-box button:active {
+            transform: scale(0.96);
+        }
+
+        .search-box button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Error Message */
+        .error-message {
+            color: #c0392b;
+            font-size: 0.9rem;
+            margin-top: 0.75rem;
+            min-height: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+        }
+
+        /* Sections */
+        section {
+            padding: 6rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 3rem;
+        }
+
+        /* Enhanced Scroll Animation Classes */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scroll-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Staggered children animation */
+        .scroll-reveal .step-card,
+        .scroll-reveal .feature-card {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scroll-reveal.visible .step-card,
+        .scroll-reveal.visible .feature-card {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-reveal.visible .step-card:nth-child(1) { transition-delay: 0.1s; }
+        .scroll-reveal.visible .step-card:nth-child(2) { transition-delay: 0.2s; }
+        .scroll-reveal.visible .step-card:nth-child(3) { transition-delay: 0.3s; }
+
+        .scroll-reveal.visible .feature-card:nth-child(1) { transition-delay: 0.1s; }
+        .scroll-reveal.visible .feature-card:nth-child(2) { transition-delay: 0.15s; }
+        .scroll-reveal.visible .feature-card:nth-child(3) { transition-delay: 0.2s; }
+        .scroll-reveal.visible .feature-card:nth-child(4) { transition-delay: 0.25s; }
+        .scroll-reveal.visible .feature-card:nth-child(5) { transition-delay: 0.3s; }
+        .scroll-reveal.visible .feature-card:nth-child(6) { transition-delay: 0.35s; }
+
+        /* How It Works */
+        .how-it-works {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 4rem;
+            margin: 4rem auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .step-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(44, 36, 32, 0.12);
+        }
+
+        .step-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .step-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .step-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            padding: 2rem;
+            border: 1px solid var(--bg-secondary);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            background: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Why Use It Section */
+        .why-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin: 6rem auto;
+        }
+
+        .why-content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .why-content p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .benefits-list {
+            list-style: none;
+        }
+
+        .benefits-list li {
+            padding: 0.75rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .benefits-list li:hover {
+            transform: translateX(5px);
+        }
+
+        .benefits-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .benefits-list li:hover::before {
+            background: var(--accent-light);
+        }
+
+        .why-visual {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 3rem;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mockup {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px var(--shadow);
+            width: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        .mockup:hover {
+            transform: scale(1.02);
+        }
+
+        .mockup-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mockup-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+        }
+
+        .mockup-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mockup-line {
+            height: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+        }
+
+        .mockup-line.short {
+            width: 60%;
+        }
+
+        .mockup-line.medium {
+            width: 80%;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            margin: 4rem auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .cta-section p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+
+        .cta-button:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 115, 85, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--bg-secondary);
+        }
+
+        /* Loading Spinner (inline for button) */
+        .spinner-inline {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .why-section {
+                grid-template-columns: 1fr;
+            }
+
+            .how-it-works {
+                padding: 2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#hero" class="logo">GitFolio</a>
+            <ul class="nav-links">
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#what-it-is">What It Is</a></li>
+                <li><a href="#why-use-it">Why Use It</a></li>
+                <li><a href="#why-you-need-it">Why You Need It</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <h1>Create Your Portfolio in Seconds</h1>
+        <p>Enter your GitHub username and instantly generate a beautiful, professional portfolio showcasing your work.</p>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" placeholder="Enter your GitHub username" id="usernameInput">
+                <button id="generateBtn">Generate</button>
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works scroll-reveal">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Three simple steps to create your professional portfolio</p>
+        
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">01</div>
+                <h3>Enter Username</h3>
+                <p>Type your GitHub username into the search box above. No sign-up required.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">02</div>
+                <h3>Instant Generation</h3>
+                <p>We pull your real data from GitHub API and create a beautiful portfolio in seconds.</p>
+            </div>
+            
+            <div class="step-card">
+                <div class="step-number">03</div>
+                <h3>Share Your Portfolio</h3>
+                <p>Get a unique shareable link to showcase your work to employers and clients.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What It Is Section -->
+    <section id="what-it-is" class="scroll-reveal">
+        <h2 class="section-title">What It Is</h2>
+        <p class="section-subtitle">GitFolio is a web tool that transforms your GitHub profile into a stunning portfolio page automatically.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Profile Information</h3>
+                <p>Displays your avatar, bio, name, and location pulled directly from your GitHub profile.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Top Repositories</h3>
+                <p>Showcases your best projects with stars, forks, and programming languages used.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Contribution Statistics</h3>
+                <p>Visual representation of your coding activity and contribution patterns.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Tech Stack Badges</h3>
+                <p>Automatically generated badges showing the technologies you work with.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Beautiful Themes</h3>
+                <p>Choose from multiple color schemes to match your personal style.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Responsive Design</h3>
+                <p>Your portfolio looks great on mobile, tablet, and desktop devices.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Use It Section -->
+    <section id="why-use-it" class="why-section scroll-reveal">
+        <div class="why-content">
+            <h2>Why Use GitFolio</h2>
+            <p>Stop spending hours building portfolio websites from scratch. GitFolio does the heavy lifting for you.</p>
+            
+            <ul class="benefits-list">
+                <li>No coding required</li>
+                <li>Updates automatically with your GitHub activity</li>
+                <li>Professional design out of the box</li>
+                <li>Free to use forever</li>
+                <li>Shareable link ready in seconds</li>
+            </ul>
+        </div>
+        
+        <div class="why-visual">
+            <div class="mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dot"></div>
+                    <div class="mockup-dot"></div>
+                    <div class="mockup-dot"></div>
+                </div>
+                <div class="mockup-content">
+                    <div class="mockup-line short"></div>
+                    <div class="mockup-line medium"></div>
+                    <div class="mockup-line"></div>
+                    <div class="mockup-line short"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why You Need It Section -->
+    <section id="why-you-need-it" class="scroll-reveal">
+        <h2 class="section-title">Why You Need It</h2>
+        <p class="section-subtitle">In today competitive job market, having an online presence is essential. GitFolio makes it effortless.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Stand Out to Employers</h3>
+                <p>A polished portfolio shows professionalism and attention to detail before you even speak.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Showcase Real Work</h3>
+                <p>Display actual projects with live metrics instead of just listing skills on a resume.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Save Time</h3>
+                <p>What takes days to build manually happens in seconds with GitFolio.</p>
+            </div>
+            
+            <div class="feature-card">
+                <h3>Always Current</h3>
+                <p>Your portfolio stays updated as you push new code and contribute to projects.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section scroll-reveal">
+        <h2>Ready to Create Your Portfolio?</h2>
+        <p>Join thousands of developers who have already showcased their work with GitFolio.</p>
+        <a href="#hero" class="cta-button">Get Started Now</a>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>GitFolio - Instant GitHub Portfolio Generator</p>
+    </footer>
+
+    <script>
+        // Enhanced scroll reveal animation with staggered children
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach((el) => observer.observe(el));
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // ==========================================
+        // SEARCH FUNCTIONALITY - NOW WORKING!
+        // ==========================================
+        
+        const usernameInput = document.getElementById('usernameInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        function generatePortfolio() {
+            const username = usernameInput.value.trim();
+            
+            // Validate: not empty
+            if (!username) {
+                showError('Please enter a GitHub username');
+                usernameInput.focus();
+                return;
+            }
+            
+            // Validate: minimum 3 characters
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters');
+                usernameInput.focus();
+                return;
+            }
+            
+            // Validate: only letters, numbers, hyphens
+            if (!/^[a-zA-Z0-9-]+$/.test(username)) {
+                showError('Username can only contain letters, numbers, and hyphens');
+                usernameInput.focus();
+                return;
+            }
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="spinner-inline"></span> Generating...';
+            
+            // Simulate loading for 1.5 seconds then redirect
+            setTimeout(() => {
+                // Redirect to portfolio page with username
+                window.location.href = '/portfolio?user=' + encodeURIComponent(username);
+            }, 1500);
+        }
+
+        // Click event
+        generateBtn.addEventListener('click', generatePortfolio);
+
+        // Enter key event
+        usernameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                generatePortfolio();
+            }
+        });
+
+        // Clear error when typing
+        usernameInput.addEventListener('input', function() {
+            errorMessage.classList.remove('show');
+        });
+
+        // Focus input on page load
+        window.addEventListener('load', function() {
+            usernameInput.focus();
+        });
+    </script>
+</body>
+</html>

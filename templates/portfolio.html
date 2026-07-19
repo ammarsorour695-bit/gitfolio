@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitFolio - Portfolio Preview</title>
+    <link href="https://cdn.jsdelivr.net/npm/fontsource-inter@4.0.0/index.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #f5f1eb;
+            --bg-secondary: #ebe5dc;
+            --text-primary: #2c2420;
+            --text-secondary: #6b5d54;
+            --accent: #8b7355;
+            --accent-light: #a89070;
+            --white: #ffffff;
+            --shadow: rgba(44, 36, 32, 0.08);
+            --error-red: #c0392b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(245, 241, 235, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1.2rem 0;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--text-primary);
+        }
+
+        .user-display {
+            font-weight: 600;
+            color: var(--accent);
+            font-size: 0.95rem;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--bg-secondary);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 1.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            display: none;
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .error-state.show {
+            display: block;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--error-red);
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            padding-top: 80px;
+        }
+
+        .main-content.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Profile Section */
+        .profile-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--accent);
+            box-shadow: 0 4px 20px var(--shadow);
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .full-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .username-display {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .bio {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Repositories Section */
+        .repos-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+
+        .repos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .repo-card {
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .repo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(44, 36, 32, 0.12);
+        }
+
+        .repo-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .repo-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .repo-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .repo-stats {
+            display: flex;
+            gap: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .repo-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .language-badge {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Tech Stack */
+        .tech-stack-section {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .tech-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .tech-badge {
+            background: var(--white);
+            color: var(--text-primary);
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tech-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(44, 36, 32, 0.12);
+        }
+
+        .no-repos {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-section {
+                padding: 3rem 1.5rem;
+            }
+
+            .full-name {
+                font-size: 1.75rem;
+            }
+
+            .stats {
+                gap: 1.5rem;
+            }
+
+            .repos-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-container {
+                padding: 0 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Fetching GitHub data...</div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="back-link">← Back to Home</a>
+            <div class="user-display" id="userDisplay">Viewing: ...</div>
+        </div>
+    </nav>
+
+    <!-- Error State -->
+    <div class="error-state" id="errorState">
+        <div class="error-icon">😕</div>
+        <div class="error-title">User Not Found</div>
+        <div class="error-message">The GitHub user you're looking for doesn't exist. Please check the username and try again.</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="avatar" id="avatar">👤</div>
+            <h1 class="full-name" id="fullName">Loading...</h1>
+            <div class="username-display" id="usernameDisplay">@username</div>
+            <p class="bio" id="bio">Loading bio...</p>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="repoCount">-</div>
+                    <div class="stat-label">Repos</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="starCount">-</div>
+                    <div class="stat-label">Stars</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="followerCount">-</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Repositories Section -->
+        <section class="repos-section">
+            <h2 class="section-title">📁 Top Repositories</h2>
+            <div class="repos-grid" id="reposGrid">
+                <!-- Repos will be inserted here -->
+            </div>
+        </section>
+
+        <!-- Tech Stack Section -->
+        <section class="tech-stack-section">
+            <h2 class="section-title">🏷️ Tech Stack</h2>
+            <div class="tech-badges" id="techBadges">
+                <!-- Badges will be inserted here -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Get username from URL
+        function getUsernameFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('user');
+        }
+
+        // Fetch GitHub data from our backend
+        async function fetchGitHubData(username) {
+            try {
+                const response = await fetch(`/api/github/${username}`);
+                
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('User not found');
+                    }
+                    throw new Error('Server error');
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Render the portfolio with real data
+        function renderPortfolio(data) {
+            // Update navigation
+            document.getElementById('userDisplay').textContent = `Viewing: ${data.login}`;
+            
+            // Update profile
+            const avatarEl = document.getElementById('avatar');
+            if (data.avatar_url) {
+                avatarEl.innerHTML = `<img src="${data.avatar_url}" alt="${data.name}">`;
+            }
+            
+            document.getElementById('fullName').textContent = data.name || data.login;
+            document.getElementById('usernameDisplay').textContent = `@${data.login}`;
+            document.getElementById('bio').textContent = data.bio || 'No bio available';
+            
+            // Update stats
+            document.getElementById('repoCount').textContent = data.public_repos;
+            document.getElementById('starCount').textContent = data.total_stars;
+            document.getElementById('followerCount').textContent = data.followers;
+            
+            // Render repositories
+            const reposGrid = document.getElementById('reposGrid');
+            reposGrid.innerHTML = '';
+            
+            if (data.repos && data.repos.length > 0) {
+                data.repos.forEach(repo => {
+                    const card = document.createElement('a');
+                    card.href = repo.url;
+                    card.target = '_blank';
+                    card.className = 'repo-card';
+                    card.innerHTML = `
+                        <div class="repo-name">${repo.name}</div>
+                        <div class="repo-description">${repo.description || 'No description'}</div>
+                        <div class="repo-meta">
+                            <div class="repo-stats">
+                                <span class="repo-stat">⭐ ${repo.stars}</span>
+                                <span class="repo-stat">🍴 ${repo.forks}</span>
+                            </div>
+                            <span class="language-badge">${repo.language}</span>
+                        </div>
+                    `;
+                    reposGrid.appendChild(card);
+                });
+            } else {
+                reposGrid.innerHTML = '<div class="no-repos">No public repositories found</div>';
+            }
+            
+            // Render tech stack
+            const techBadges = document.getElementById('techBadges');
+            techBadges.innerHTML = '';
+            
+            if (data.languages && data.languages.length > 0) {
+                data.languages.forEach(lang => {
+                    const badge = document.createElement('span');
+                    badge.className = 'tech-badge';
+                    badge.textContent = lang;
+                    techBadges.appendChild(badge);
+                });
+            } else {
+                techBadges.innerHTML = '<span class="tech-badge">No languages found</span>';
+            }
+        }
+
+        // Show error state
+        function showError() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('errorState').classList.add('show');
+        }
+
+        // Initialize the page
+        async function init() {
+            const username = getUsernameFromURL();
+            
+            if (!username) {
+                // No username - redirect to home
+                window.location.href = '/';
+                return;
+            }
+            
+            // Display username in nav immediately
+            document.getElementById('userDisplay').textContent = `Viewing: ${username}`;
+            
+            try {
+                // Fetch real data
+                const data = await fetchGitHubData(username);
+                
+                // Hide loading, show content
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('visible');
+                
+                // Render the data
+                renderPortfolio(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError();
+            }
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
